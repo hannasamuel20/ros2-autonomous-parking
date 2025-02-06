@@ -1,0 +1,208 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- <mesh filename="file://$(find
+my_robot_description)/meshes/base.stl" /> -->
+  <xacro:property name="base_length" value="0.6" />
+  <xacro:property name="base_width" value="0.4" />
+  <xacro:property name="base_height" value="0.2" />
+  <xacro:property name="wheel_radius" value="0.1" />
+  <xacro:property name="wheel_length" value="0.05" />
+
+  <link name="base_footprint" />
+
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="${base_length} ${base_width} ${base_height}" />
+      </geometry>
+      <origin xyz="0 0 ${base_height / 2.0}" rpy="0 0 0" />
+      <material name="green" />
+    </visual>
+    <xacro:box_inertia m="5.0" x="${base_length}" y="${base_width}" z="${base_height}"
+      o_xyz="0 0 ${base_height / 2.0}" o_rpy="0 0 0" />
+    <collision>
+      <geometry>
+        <box size="${base_length} ${base_width} ${base_height}"
+        />
+      </geometry>
+      <origin xyz="0 0 ${base_height / 2.0}" rpy="0 0 0" />
+    </collision>
+  </link>
+
+  <xacro:macro name="wheel_link" params="prefix">
+    <link name="${prefix}_wheel_link">
+      <visual>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_length}" />
+        </geometry>
+        <origin xyz="0 0 0" rpy="${pi / 2.0} 0 0" />
+        <material name="gray" />
+      </visual>
+      <xacro:cylinder_inertia m="1.0" r="${wheel_radius}" l="${wheel_length}" o_xyz="0 0 0"
+        o_rpy="${pi / 2.0} 0 0" />
+      <collision>
+        <geometry>
+          <sphere radius="${wheel_radius}" />
+        </geometry>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+      </collision>
+
+    </link>
+  </xacro:macro>
+
+
+  <xacro:wheel_link prefix="right" />
+  <xacro:wheel_link prefix="left" />
+
+  <link name="caster_wheel_link">
+    <visual>
+      <geometry>
+        <sphere radius="${wheel_radius / 2.0}" />
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <material name="gray" />
+    </visual>
+    <xacro:sphere_inertia m="0.5" r="${wheel_radius / 2.0}" o_xyz="0 0 0" o_rpy="0 0 0" />
+    <collision>
+      <geometry>
+        <sphere radius="${wheel_radius / 2.0}" />
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+    </collision>
+  </link>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="base_link" />
+    <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0" />
+  </joint>
+
+  <joint name="base_right_wheel_joint" type="continuous">
+    <parent link="base_link" />
+    <child link="right_wheel_link" />
+    <origin xyz="${-base_length / 4.0} ${-(base_width + wheel_length) / 2.0} 0" rpy="0 0 0" />
+    <axis xyz="0 1 0" />
+  </joint>
+
+  <joint name="base_left_wheel_joint" type="continuous">
+    <parent link="base_link" />
+    <child link="left_wheel_link" />
+    <origin xyz="${-base_length / 4.0} ${(base_width + wheel_length) / 2.0} 0" rpy="0 0 0" />
+    <axis xyz="0 1 0" />
+  </joint>
+
+  <joint name="base_caster_wheel_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="caster_wheel_link" />
+    <origin xyz="${base_length / 3.0} 0 ${-wheel_radius / 2.0}" rpy="0 0 0" />
+  </joint>
+
+
+  <!-- Fixed joint connecting the base to the IMU -->
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="imu_link" />
+    <!-- Use an origin instead of an SDF <pose> -->
+    <origin xyz="0 0 0.01" rpy="0 0 0" />
+  </joint>
+
+  <!-- IMU link definition -->
+  <link name="imu_link">
+    <!-- Optional visual element for debugging -->
+    <visual name="imu_link_visual">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.1 0.1 0.1" />
+      </geometry>
+    </visual>
+
+    <!-- Collision element (should match the visual shape for simplicity) -->
+    <collision name="imu_link_collision">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.1 0.1 0.1" />
+      </geometry>
+    </collision>
+
+    <!-- Inertial properties using a xacro macro -->
+    <xacro:box_inertia m="0.1" x="0.1" y="0.1" z="0.1" o_xyz="0 0 0.05" o_rpy="0 0 0" />
+  </link>
+
+  <!-- Gazebo extension to add the IMU sensor -->
+  <gazebo reference="imu_link">
+    <sensor type="imu" name="imu_sensor">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <visualize>true</visualize>
+      <topic>demo/imu</topic>
+      <!-- Use Gazebo’s frame id parameter -->
+      <frame_id>imu_link</frame_id>
+      <imu>
+        <angular_velocity>
+          <x>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.0002</stddev>
+              <bias_mean>0.0000075</bias_mean>
+              <bias_stddev>0.0000008</bias_stddev>
+            </noise>
+          </x>
+          <y>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.0002</stddev>
+              <bias_mean>0.0000075</bias_mean>
+              <bias_stddev>0.0000008</bias_stddev>
+            </noise>
+          </y>
+          <z>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.0002</stddev>
+              <bias_mean>0.0000075</bias_mean>
+              <bias_stddev>0.0000008</bias_stddev>
+            </noise>
+          </z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.017</stddev>
+              <bias_mean>0.1</bias_mean>
+              <bias_stddev>0.001</bias_stddev>
+            </noise>
+          </x>
+          <y>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.017</stddev>
+              <bias_mean>0.1</bias_mean>
+              <bias_stddev>0.001</bias_stddev>
+            </noise>
+          </y>
+          <z>
+            <noise type="gaussian">
+              <mean>0.0</mean>
+              <stddev>0.017</stddev>
+              <bias_mean>0.1</bias_mean>
+              <bias_stddev>0.001</bias_stddev>
+            </noise>
+          </z>
+        </linear_acceleration>
+      </imu>
+      <!-- Attach the Gazebo ROS IMU sensor plugin -->
+      <plugin filename="gz-sim-imu-system"
+        name="gz::sim::systems::Imu">
+        <!-- <topicName>demo/imu</topicName>
+      <bodyName>imu_link</bodyName>
+      <updateRateHZ>100.0</updateRateHZ>
+      <gaussianNoise>0.0</gaussianNoise>
+      <frameName>imu_link</frameName>
+      <initialOrientationAsReference>false</initialOrientationAsReference> -->
+      </plugin>
+    </sensor>
+  </gazebo>
+
+
+</robot>

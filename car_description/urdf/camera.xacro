@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+<!-- Joint connecting base_link to camera_link -->
+<joint name="camera_joint" type="fixed">
+  <parent link="base_link"/>
+  <child link="camera_link"/>
+  <!-- Use the URDF <origin> tag to specify position and orientation -->
+  <origin xyz="${(base_length + 0.015)/2} 0 0.15" rpy="0 0 0"/>
+</joint>
+
+<!-- Definition of the camera_link -->
+<link name="camera_link">
+  <!-- Visual representation -->
+  <visual name="camera_link_visual">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <box size="0.015 0.130 0.0222"/>
+    </geometry>
+  </visual>
+
+  <!-- Collision representation -->
+  <collision name="camera_link_collision">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <geometry>
+      <box size="0.015 0.130 0.0222"/>
+    </geometry>
+  </collision>
+
+  <!-- Inertial properties provided by a xacro macro -->
+   <xacro:box_inertia m="0.035" x="0.015" y="0.130" z="0.0222" o_xyz="0 0 0.05" o_rpy="0 0 0"/>
+</link>
+
+<!-- Gazebo extension to attach the sensor to camera_link -->
+<gazebo reference="camera_link">
+  <sensor type="rgbd_camera" name="depth_camera">
+    <always_on>true</always_on>
+    <visualize>true</visualize>
+    <update_rate>5.0</update_rate>
+    <topic>depth_camera</topic>
+    <gz_frame_id>camera_link</gz_frame_id>
+    <camera>
+      <horizontal_fov>1.047198</horizontal_fov>
+      <image>
+        <width>640</width>
+        <height>480</height>
+      </image>
+      <clip>
+        <near>0.05</near>
+        <far>3</far>
+      </clip>
+
+    </camera>
+    <baseline>0.2</baseline>
+    <pointCloudCutoff>0.5</pointCloudCutoff>
+    <pointCloudCutoffMax>3.0</pointCloudCutoffMax>
+    <distortionK1>0</distortionK1>
+    <distortionK2>0</distortionK2>
+    <distortionK3>0</distortionK3>
+    <distortionT1>0</distortionT1>
+    <distortionT2>0</distortionT2>
+    <CxPrime>0</CxPrime>
+    <Cx>0</Cx>
+    <Cy>0</Cy>
+    <focalLength>0</focalLength>
+    <hackBaseline>0</hackBaseline>
+  </sensor>
+</gazebo>
+
+
+
+</robot>

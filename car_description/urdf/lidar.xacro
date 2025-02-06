@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <!-- Joint -->
+    <joint name="lidar_joint" type="fixed">
+        <parent link="base_link" />
+        <child link="lidar_link" />
+        <origin xyz="0 0 ${base_height + 0.055/2}" rpy="0 0 0" />
+    </joint>
+
+    <!-- Link -->
+    <link name="lidar_link">
+        <visual>
+            <geometry>
+                <cylinder radius="0.0508" length="0.055" />
+            </geometry>
+        </visual>
+
+        <collision>
+            <geometry>
+                <cylinder radius="0.0508" length="0.055" />
+            </geometry>
+        </collision>
+        <xacro:cylinder_inertia m="1.0" r="0.0508" l="0.055" o_xyz="0 0 0" o_rpy="${pi / 2.0} 0 0" />
+    </link>
+    <!-- Gazebo sensor plugin -->
+    <gazebo reference="lidar_link">
+        <sensor name="lidar" type="gpu_lidar">
+            <always_on>true</always_on>
+            <visualize>true</visualize>
+            <update_rate>5</update_rate>
+                <topic>scan</topic>
+                <gz_frame_id>lidar_link</gz_frame_id>
+            <ray>
+                <scan>
+                    <horizontal>
+                        <samples>360</samples>
+                        <resolution>1.0</resolution>
+                        <min_angle>0.0</min_angle>
+                        <max_angle>6.28</max_angle>
+                    </horizontal>
+                </scan>
+                <range>
+                    <min>0.12</min>
+                    <max>3.5</max>
+                    <resolution>0.015</resolution>
+                </range>
+                <noise>
+                    <type>gaussian</type>
+                    <mean>0.0</mean>
+                    <stddev>0.01</stddev>
+                </noise>
+            </ray>
+
+            <plugin
+                filename="gz-sim-sensors-system"
+                name="gz::sim::systems::Sensors">
+                <!-- <render_engine>ogre2</render_engine> -->
+            
+            </plugin>
+
+        </sensor>
+    </gazebo>
+
+</robot>
